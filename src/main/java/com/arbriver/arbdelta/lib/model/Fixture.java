@@ -15,5 +15,6 @@ public record Fixture(
     @ValueConverter(ConstantConverter.BookmakerConverter.class)
     Bookmaker book,
     String home,
-    String away
+    String away,
+    String hyperlink
 ) {}
