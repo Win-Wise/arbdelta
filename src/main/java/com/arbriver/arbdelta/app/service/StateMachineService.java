@@ -40,7 +40,7 @@ public class StateMachineService {
                 .create();
         StartSyncExecutionRequest request = StartSyncExecutionRequest.builder()
                 .stateMachineArn(stateMachineArn)
-                .name(match.text().replace(" ","-"))
+                .name(match.text().replaceAll("[^A-Za-z0-9]", "").replace(" ","-"))
                 .input(gson.toJson(match))
                 .build();
 

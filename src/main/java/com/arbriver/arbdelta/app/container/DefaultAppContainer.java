@@ -25,12 +25,13 @@ public class DefaultAppContainer {
     }
 
     public void start() {
-        List<Match> matches = mongoMatchService.listMatches();
+        List<Match> matches = mongoMatchService.listCommonMatches();
         System.out.println(STR."Searching through \{matches.size()} matches.");
         for (Match match : matches) {
+            System.out.println(STR."Looking for match \{match.text()}");
             StartSyncExecutionResponse resp = stateMachineService.sendMatchToArbProcessor(match, "arn:aws:states:us-east-1:327989636102:stateMachine:arb-adapter-statemachine");
             WinWiseResponse winWiseResponse = gson.fromJson(resp.output(), WinWiseResponse.class);
-            if(!winWiseResponse.getProfit().isEmpty() && winWiseResponse.getProfit().getFirst() > 0) {
+            if(winWiseResponse.getProfit() != null && !winWiseResponse.getProfit().isEmpty() && winWiseResponse.getProfit().getFirst() > 0) {
                 System.out.println(STR."Arbitrage Found: \{match.text()}");
                 System.out.println(STR."Profit: \{winWiseResponse.getProfit()}");
                 for(WinWiseResponse.WinWiseBet bet : winWiseResponse.getBets()) {
