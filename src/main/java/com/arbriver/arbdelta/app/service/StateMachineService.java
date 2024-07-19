@@ -44,6 +44,7 @@ public class StateMachineService {
                 .input(gson.toJson(match))
                 .build();
 
+
         return sfnClient.startSyncExecution(request);
     }
 }

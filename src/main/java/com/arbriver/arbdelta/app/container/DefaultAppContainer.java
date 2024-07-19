@@ -31,6 +31,11 @@ public class DefaultAppContainer {
             System.out.println(STR."Looking for match \{match.text()}");
             StartSyncExecutionResponse resp = stateMachineService.sendMatchToArbProcessor(match, "arn:aws:states:us-east-1:327989636102:stateMachine:arb-adapter-statemachine");
             WinWiseResponse winWiseResponse = gson.fromJson(resp.output(), WinWiseResponse.class);
+            if(winWiseResponse == null) {
+                System.out.println("ERROR. RESPONSE FROM WINWISE NOT MATCHING WINWISERESPONSE SCHEMA:");
+                System.out.println(resp.output());
+                continue;
+            }
             if(winWiseResponse.getProfit() != null && !winWiseResponse.getProfit().isEmpty() && winWiseResponse.getProfit().getFirst() > 0) {
                 System.out.println(STR."Arbitrage Found: \{match.text()}");
                 System.out.println(STR."Profit: \{winWiseResponse.getProfit()}");

@@ -4,5 +4,6 @@ public enum Bookmaker {
     BETRIVERS,
     CAESARS,
     DRAFTKINGS,
-    FANDUEL
+    FANDUEL,
+    BETFAIR
 }
