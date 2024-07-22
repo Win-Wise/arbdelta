@@ -1,17 +1,15 @@
 package com.arbriver.arbdelta.app.service;
 
+import com.arbriver.arbdelta.app.handler.MatchHandler;
 import com.arbriver.arbdelta.lib.model.Fixture;
 import com.arbriver.arbdelta.lib.model.Match;
-import com.arbriver.arbdelta.lib.model.WinWiseResponse;
+import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
 import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.sfn.model.StartSyncExecutionResponse;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,14 +18,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MatchOrchestrator {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final MongoMatchService mongoMatchService;
-    private final StateMachineService stateMachineService;
-    private final Gson gson;
+    private final MatchHandler matchHandler;
 
 
-    public MatchOrchestrator(MongoMatchService mongoMatchService, StateMachineService stateMachineService, Gson gson) {
+    public MatchOrchestrator(MongoMatchService mongoMatchService, MatchHandler matchHandler) {
         this.mongoMatchService = mongoMatchService;
-        this.stateMachineService = stateMachineService;
-        this.gson = gson;
+        this.matchHandler = matchHandler;
     }
 
     public void orchestrate() {
@@ -40,12 +36,12 @@ public class MatchOrchestrator {
         List<Match> matches = mongoMatchService.listCommonMatches();
         log.info("Starting cycle. Processing {} matches", matches.size());
         AtomicInteger submitTaskCount = new AtomicInteger(0);
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
-        CompletionService<ArbResponse> completionService = new ExecutorCompletionService<>(executorService);
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        CompletionService<MatchHandler.ArbResponse> completionService = new ExecutorCompletionService<>(executorService);
         try {
             for (Match match : matches) {
-                if(match.start_time().isBefore(Instant.now())) {
-                    log.debug("{} started at {}. Discarding.", match.text(), match.start_time());
+                if(match.getStart_time().isBefore(Instant.now())) {
+                    log.debug("{} started at {}. Discarding.", match.getText(), match.getStart_time());
                     continue;
                 }
                 completionService.submit(new MatchProcessor(match));
@@ -58,29 +54,31 @@ public class MatchOrchestrator {
 
 
         for (int i = 0; i < Math.min(submitTaskCount.get(), matches.size()); i++) {
-            ArbResponse arbResponse;
+            MatchHandler.ArbResponse arbResponse;
             try {
                 arbResponse = completionService.take().get();
                 WinWiseResponse winWiseResponse = arbResponse.response();
                 if(winWiseResponse == null) {
                     continue;
                 }
-                Match match = arbResponse.match;
-                log.info("Finished {}/{}: {}", i, submitTaskCount.get(), match.text());
+                Match match = arbResponse.match();
+                int numPositions = 0;
+                for(Fixture link : match.getLinks()) numPositions += link.getPositions().size();
+                log.info("Finished {}/{}: {}. {} positions processed.", i, submitTaskCount.get(), match.getText(), numPositions);
                 if(winWiseResponse.getErrors() != null && !winWiseResponse.getErrors().isEmpty()) {
                     //TODO: process errors
                     //log.warn("{} had errors in the response: {}", match.text(), winWiseResponse.getErrors());
                 }
 
                 if(winWiseResponse.getProfit() != null && !winWiseResponse.getProfit().isEmpty() && winWiseResponse.getProfit().getFirst() > 0) {
-                    log.info("Arbitrage found for {}", match.text());
+                    log.info("Arbitrage found for {}", match.getText());
                     log.info("\tProfit: {}", winWiseResponse.getProfit());
-                    for(WinWiseResponse.WinWiseBet bet : winWiseResponse.getBets()) {
+                    for(WinWiseResponse.Bet bet : winWiseResponse.getBets()) {
                         Bookmaker bookmaker = Bookmaker.valueOf(bet.bookmaker());
                         log.info("\t{}", bet);
-                        for(Fixture link : match.links()) {
-                            if(link.book().equals(bookmaker)) {
-                                log.info("\t{}", link.hyperlink());
+                        for(Fixture link : match.getLinks()) {
+                            if(link.getBook().equals(bookmaker)) {
+                                log.info("\t{}", link.getHyperlink());
                             }
                         }
                     }
@@ -92,9 +90,7 @@ public class MatchOrchestrator {
         log.info("Completed Cycle. Processed {} matches.", submitTaskCount.get());
     }
 
-    record ArbResponse(Match match, WinWiseResponse response) {}
-
-    class MatchProcessor implements Callable<ArbResponse> {
+    class MatchProcessor implements Callable<MatchHandler.ArbResponse> {
         private final Match match;
 
         public MatchProcessor(Match match) {
@@ -102,22 +98,14 @@ public class MatchOrchestrator {
         }
 
         @Override
-        public ArbResponse call() {
-            StartSyncExecutionResponse resp = stateMachineService.sendMatchToArbProcessor(match,
-                    "arn:aws:states:us-east-1:327989636102:stateMachine:arb-adapter-statemachine");
-
-            if(resp.output() == null) {
-                log.error("{} did not return a response from statemachine. Check execution arn: {}", match.text(), resp.executionArn());
-                return new ArbResponse(match, null);
+        public MatchHandler.ArbResponse call() {
+            try {
+                matchHandler.populateOdds(match);
+                return matchHandler.getArbResponse(match);
+            } catch(Exception ex) {
+                log.error("Error processing match {}", match.getText(), ex);
+                return new MatchHandler.ArbResponse(match, null);
             }
-
-            WinWiseResponse winWiseResponse = gson.fromJson(resp.output(), WinWiseResponse.class);
-            if(winWiseResponse == null) {
-                log.error("{} could not be processed as a winwise entity. Output: {}", match.text(), resp.output());
-                return new ArbResponse(match, null);
-            }
-
-            return new ArbResponse(match, winWiseResponse);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.arbriver.arbdelta.lib.model;
+package com.arbriver.arbdelta.lib.model.apimodel;
 
 import lombok.Data;
 
@@ -13,12 +13,12 @@ public class WinWiseResponse {
     private int mode;
     private int max_process_time;
     private int total_max_wager_count;
-    private List<WinWiseBet> bets;
-    private List<WinWiseBook> books;
+    private List<Bet> bets;
+    private List<WinWiseResponse.Book> books;
     private List<String> errors;
-    private List<WinWiseResult> result_table;
+    private List<Result> result_table;
 
-    public record WinWiseBet(
+    public record Bet(
             double wager,
             String bet_type,
             String value,
@@ -29,7 +29,7 @@ public class WinWiseResponse {
             double previous_wager
     ) {}
 
-    public record WinWiseBook(
+    public record Book(
             String bookmaker,
             double commission,
             double wager_limit,
@@ -37,7 +37,7 @@ public class WinWiseResponse {
             int max_wager_count
     ) {}
 
-    public record WinWiseResult(
+    public record Result(
             double profit,
             List<String> result
     ) {}

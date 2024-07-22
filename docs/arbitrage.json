@@ -1,0 +1,36 @@
+{
+  "_id": "2001875872876309844-09840237402",
+  "home": "avai",
+  "away": "ceara",
+  "sport": "SOCCER",
+  "start_time": {
+    "$date": "2024-07-19T22:00:00.000Z"
+  },
+  "text": "avai vs ceara",
+  "links": [
+    {
+      "event_id": "c667a818-0fcd-4fbf-860f-f3c4a657fa48",
+      "score": 1,
+      "text": "avai vs ceara",
+      "start_time": {
+        "$date": "2024-07-19T22:00:00.000Z"
+      },
+      "book": "CAESARS",
+      "home": "Avai",
+      "away": "Ceara",
+      "hyperlink": "https://sportsbook.caesars.com/us/il/bet/football/c667a818-0fcd-4fbf-860f-f3c4a657fa48/Avai-vs-Ceara"
+    },
+    {
+      "event_id": "30803658",
+      "score": 0.9486688375473022,
+      "text": "avai vs ceara ce",
+      "start_time": {
+        "$date": "2024-07-19T22:00:00.000Z"
+      },
+      "book": "DRAFTKINGS",
+      "home": "Avai",
+      "away": "Ceara CE",
+      "hyperlink": "https://sportsbook.draftkings.com/event/Avai-vs-Ceara-CE/30803658"
+    }
+  ]
+}
