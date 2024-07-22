@@ -1,12 +1,9 @@
 package com.arbriver.arbdelta.app.service;
 
 import com.arbriver.arbdelta.lib.model.Fixture;
-import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.Position;
-import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
 import com.arbriver.arbdelta.lib.model.constants.Sport;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;

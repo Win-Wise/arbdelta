@@ -38,8 +38,8 @@ public class MatchHandler {
             }
             executorService.shutdown();
 
-            if(!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                throw new InterruptedException("Timed out waiting to retrieve odds for %s".formatted(match.getText()));
+            if(!executorService.awaitTermination(120, TimeUnit.SECONDS)) {
+                throw new InterruptedException("Timed out waiting to retrieve odds for %s after %s seconds".formatted(match.getText(), 100));
             }
         }
     }

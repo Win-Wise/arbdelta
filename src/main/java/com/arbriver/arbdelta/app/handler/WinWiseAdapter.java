@@ -52,7 +52,7 @@ public class WinWiseAdapter {
                 WinWiseRequest.Bet bet = WinWiseRequest.Bet.builder()
                         .value(position.getValue())
                         .odds(position.getOdds())
-                        .bet_type(position.getBetType())
+                        .bet_type(position.getBet_type())
                         .bookmaker(link.getBook().name())
                         .build();
                 positions.add(bet);
