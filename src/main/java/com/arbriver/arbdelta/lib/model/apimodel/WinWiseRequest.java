@@ -18,7 +18,7 @@ public final class WinWiseRequest {
     @Builder.Default
     private boolean no_draw = false;
     @Builder.Default
-    private int mode = -1;
+    private int mode = 1;
     @Builder.Default
     private int max_process_time = 25;
     @Builder.Default

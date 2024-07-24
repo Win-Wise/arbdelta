@@ -35,6 +35,11 @@ public class WinWiseAdapter {
         HttpRequest request = baseWinWiseRequest.POST(HttpRequest.BodyPublishers.ofString(gson.toJson(requestObject))).build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if(response.statusCode() >= 500) {
+            throw new IOException("Internal server error from winwise getting arbitrage response");
+        } else if(response.statusCode() >= 400) {
+            throw new IOException("Bad request format getting arbitrage response");
+        }
         return gson.fromJson(response.body(), WinWiseResponse.class);
     }
 
