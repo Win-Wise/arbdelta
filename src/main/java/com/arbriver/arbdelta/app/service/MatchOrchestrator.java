@@ -67,7 +67,7 @@ public class MatchOrchestrator {
                 log.info("Finished {}/{}: {}. {} positions processed.", i, submitTaskCount.get(), match.getText(), numPositions);
                 if(winWiseResponse.getErrors() != null && !winWiseResponse.getErrors().isEmpty()) {
                     //TODO: process errors
-                    //log.warn("{} had errors in the response: {}", match.getText(), winWiseResponse.getErrors());
+                    log.warn("{} had errors in the response: {}", match.getText(), winWiseResponse.getErrors());
                 }
 
                 if(winWiseResponse.getProfit() != null && !winWiseResponse.getProfit().isEmpty() && winWiseResponse.getProfit().getFirst() > 0) {

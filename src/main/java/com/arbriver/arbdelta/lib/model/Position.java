@@ -8,5 +8,5 @@ public class Position {
     private final double odds;
     private final String value;
     private boolean lay;
-    private double volume;
+    private Double volume;
 }

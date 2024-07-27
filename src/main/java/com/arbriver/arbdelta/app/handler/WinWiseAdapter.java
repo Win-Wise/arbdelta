@@ -15,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class WinWiseAdapter {
@@ -58,6 +59,8 @@ public class WinWiseAdapter {
                         .value(position.getValue())
                         .odds(position.getOdds())
                         .bet_type(position.getBet_type())
+                        .volume(position.getVolume() == null ? -1.0 : position.getVolume())
+                        .lay(position.isLay())
                         .bookmaker(link.getBook().name())
                         .build();
                 positions.add(bet);
@@ -65,6 +68,7 @@ public class WinWiseAdapter {
         });
 
         return WinWiseRequest.builder()
+                .executionId(match.getText().toLowerCase(Locale.ROOT))
                 .bets(positions)
                 .books(books)
                 .build();

@@ -23,6 +23,7 @@ public final class WinWiseRequest {
     private int max_process_time = 25;
     @Builder.Default
     private int total_max_wager_count = -1;
+    private String executionId;
     private List<WinWiseRequest.Bet> bets;
     private List<WinWiseRequest.Book> books;
 
