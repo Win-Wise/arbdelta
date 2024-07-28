@@ -3,6 +3,7 @@ package com.arbriver.arbdelta.app.handler;
 import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseRequest;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
+import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +50,13 @@ public class WinWiseAdapter {
         List<WinWiseRequest.Book> books = new ArrayList<>();
 
         match.getLinks().forEach(link -> {
+            double commission = 0.0;
+            if(link.getBook().equals(Bookmaker.BETFAIR)) {
+                commission = 0.02;
+            }
             WinWiseRequest.Book book = WinWiseRequest.Book.builder()
                     .bookmaker(link.getBook().name())
+                    .commission(commission)
                     .build();
             books.add(book);
 
