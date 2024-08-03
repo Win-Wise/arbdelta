@@ -1,9 +1,10 @@
 package com.arbriver.arbdelta.app.service;
 
 import com.arbriver.arbdelta.app.handler.MatchHandler;
+import com.arbriver.arbdelta.lib.model.Arbitrage;
+import com.arbriver.arbdelta.lib.model.BookPosition;
 import com.arbriver.arbdelta.lib.model.Fixture;
 import com.arbriver.arbdelta.lib.model.Match;
-import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
 import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,12 +38,12 @@ public class MatchOrchestrator {
         List<Match> matches = mongoMatchService.listCommonMatches();
         log.info("Starting cycle. Processing {} matches", matches.size());
         AtomicInteger submitTaskCount = new AtomicInteger(0);
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
         CompletionService<MatchHandler.ArbResponse> completionService = new ExecutorCompletionService<>(executorService);
         try {
             for (Match match : matches) {
-                if(match.getStart_time().isBefore(Instant.now())) {
-                    log.debug("{} started at {}. Discarding.", match.getText(), match.getStart_time());
+                if(match.getStartTime().isBefore(Instant.now())) {
+                    log.debug("{} started at {}. Discarding.", match.getText(), match.getStartTime());
                     continue;
                 }
                 completionService.submit(new MatchProcessor(match));
@@ -57,30 +59,24 @@ public class MatchOrchestrator {
             MatchHandler.ArbResponse arbResponse;
             try {
                 arbResponse = completionService.take().get();
-                WinWiseResponse winWiseResponse = arbResponse.response();
-                if(winWiseResponse == null) {
+                Arbitrage arbitrage = arbResponse.response();
+                if(arbitrage == null) {
                     continue;
                 }
                 Match match = arbResponse.match();
                 int numPositions = 0;
-                for(Fixture link : match.getLinks()) numPositions += link.getPositions().size();
+                for(Map.Entry<Bookmaker, Fixture> link : match.getLinks().entrySet()) numPositions += link.getValue().getPositions().size();
                 log.info("Finished {}/{}: {}. {} positions processed.", i, submitTaskCount.get(), match.getText(), numPositions);
-                if(winWiseResponse.getErrors() != null && !winWiseResponse.getErrors().isEmpty()) {
-                    //TODO: process errors
-                    log.warn("{} had errors in the response: {}", match.getText(), winWiseResponse.getErrors());
-                }
 
-                if(winWiseResponse.getProfit() != null && !winWiseResponse.getProfit().isEmpty() && winWiseResponse.getProfit().getFirst() > 0) {
+                if(arbitrage.getBest_profit() > 0.0) {
+                    matchHandler.processArb(arbitrage);
                     log.info("Arbitrage found for {}", match.getText());
-                    log.info("\tProfit: {}", winWiseResponse.getProfit());
-                    for(WinWiseResponse.Bet bet : winWiseResponse.getBets()) {
-                        Bookmaker bookmaker = Bookmaker.valueOf(bet.bookmaker());
+                    log.info("\tBest Profit: {}, Worst Profit: {}", arbitrage.getBest_profit(), arbitrage.getWorst_profit());
+                    for(BookPosition bet : arbitrage.getPortfolio()) {
+                        Bookmaker bookmaker = Bookmaker.valueOf(bet.bookmaker().name());
                         log.info("\t{}", bet);
-                        for(Fixture link : match.getLinks()) {
-                            if(link.getBook().equals(bookmaker)) {
-                                log.info("\t{}", link.getHyperlink());
-                            }
-                        }
+                        Fixture link = match.getLinks().get(bookmaker);
+                        log.info("\t{}", link.getHyperlink());
                     }
                 }
             } catch (ExecutionException | InterruptedException ex) {
@@ -102,6 +98,7 @@ public class MatchOrchestrator {
             try {
                 matchHandler.populateOdds(match);
                 return matchHandler.getArbResponse(match);
+
             } catch(Exception ex) {
                 log.error("Error processing match {}", match.getText(), ex);
                 return new MatchHandler.ArbResponse(match, null);

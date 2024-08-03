@@ -1,5 +1,6 @@
 package com.arbriver.arbdelta.app.handler;
 
+import com.arbriver.arbdelta.lib.model.Fixture;
 import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseRequest;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
@@ -49,7 +50,7 @@ public class WinWiseAdapter {
         List<WinWiseRequest.Bet> positions = new ArrayList<>();
         List<WinWiseRequest.Book> books = new ArrayList<>();
 
-        match.getLinks().forEach(link -> {
+        match.getLinks().forEach((bookmaker, link) -> {
             double commission = 0.0;
             if(link.getBook().equals(Bookmaker.BETFAIR)) {
                 commission = 0.02;

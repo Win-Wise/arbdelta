@@ -3,6 +3,8 @@ package com.arbriver.arbdelta.app.service;
 import com.arbriver.arbdelta.lib.model.Fixture;
 import com.arbriver.arbdelta.lib.model.Position;
 import com.arbriver.arbdelta.lib.model.constants.Sport;
+import com.arbriver.arbdelta.lib.model.converters.MatchMapper;
+import com.arbriver.arbdelta.lib.model.dbmodel.FixtureDTO;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -23,15 +25,18 @@ public class LambdaMatchService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final LambdaClient lambdaClient;
     private final Gson gson;
+    private final MatchMapper mapper;
 
     public LambdaMatchService(LambdaClient lambdaClient, Gson gson) {
         this.lambdaClient = lambdaClient;
         this.gson = gson;
+        this.mapper = new MatchMapper();
     }
 
     public List<Position> getPositionsForFixture(Fixture fixture, Sport sport) {
+        FixtureDTO fixtureDTO = mapper.toFixtureDTO(fixture);
         JsonObject requestElement = new JsonObject();
-        requestElement.add("event", gson.toJsonTree(fixture));
+        requestElement.add("event", gson.toJsonTree(fixtureDTO));
         requestElement.addProperty("sport", sport.toString());
 
         InvokeRequest req = InvokeRequest.builder()

@@ -1,26 +1,24 @@
 package com.arbriver.arbdelta.lib.model;
 
+import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 import com.arbriver.arbdelta.lib.model.constants.Sport;
-import com.arbriver.arbdelta.lib.model.converters.ConstantConverter;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.convert.ValueConverter;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.arbriver.arbdelta.lib.model.dbmodel.FixtureDTO;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.HashMap;
 
-@Data
-@Document(collection = "matches")
+@Getter
+@Setter
+@Builder
 public class Match {
-    @Id
-    private final String _id;
+    private final String id;
     private final String home;
     private final String away;
-    @ValueConverter(ConstantConverter.SportConverter.class)
     private final Sport sport;
-    private final Instant start_time;
+    private final Instant startTime;
     private final String text;
-    private final List<Fixture> links;
+    private HashMap<Bookmaker, Fixture> links;
 }
