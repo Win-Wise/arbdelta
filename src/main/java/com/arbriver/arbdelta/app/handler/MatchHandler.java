@@ -42,9 +42,9 @@ public class MatchHandler {
     public List<Fixture> getValidFixtures(Match match) {
         List<Fixture> validFixtures = new ArrayList<>();
         match.getLinks().forEach((book, fixture) -> {
-            //only scrape fanduel or caesars if the event is happening in next 3 hours
+            //only scrape fanduel or caesars if the event is happening in next 5 min
             if(book.equals(Bookmaker.CAESARS) || book.equals(Bookmaker.FANDUEL)) {
-                if(fixture.getStartTime().isBefore(Instant.now().plus(Duration.ofHours(3)))) {
+                if(fixture.getStartTime().isBefore(Instant.now().plus(Duration.ofMinutes(5)))) {
                     validFixtures.add(fixture);
                 }
             }else {

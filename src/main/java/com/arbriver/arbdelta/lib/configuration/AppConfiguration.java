@@ -25,10 +25,9 @@ public class AppConfiguration {
     public HttpRequest.Builder getBaseWinwiseRequest() {
         //TODO make this not hardcoded
         return HttpRequest.newBuilder()
-                .uri(URI.create("https://multi-market-calculator.p.rapidapi.com/MultiMarket"))
+                .uri(URI.create("https://zp1nlkf7qk.execute-api.eu-west-2.amazonaws.com/MultiMarket"))
                 .header("Content-Type", "application/json")
-                .header("x-rapidapi-key", "3e058a8afamsh7011c00ae2f5b51p1fcee3jsn281de7db5a32")
-                .header("x-rapidapi-host", "multi-market-calculator.p.rapidapi.com");
+                .header("x-rapidapi-proxy-secret", "a3d4f1b2-e7c6-b5d8-9123-0f4b67e8a9c1");
     }
 
     @Bean

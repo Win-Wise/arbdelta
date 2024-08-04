@@ -2,7 +2,6 @@ package com.arbriver.arbdelta.app.service;
 
 import com.arbriver.arbdelta.app.handler.MatchHandler;
 import com.arbriver.arbdelta.lib.model.Arbitrage;
-import com.arbriver.arbdelta.lib.model.BookPosition;
 import com.arbriver.arbdelta.lib.model.Fixture;
 import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
@@ -10,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +35,7 @@ public class MatchOrchestrator {
     }
 
     public void cycleOnce() {
+        Instant start = Instant.now();
         List<Match> matches = mongoMatchService.listCommonMatches();
         log.info("Starting cycle. Processing {} matches", matches.size());
         AtomicInteger submitTaskCount = new AtomicInteger(0);
@@ -69,21 +70,20 @@ public class MatchOrchestrator {
                 log.info("Finished {}/{}: {}. {} positions processed.", i, submitTaskCount.get(), match.getText(), numPositions);
 
                 if(arbitrage.getBest_profit() > 0.0) {
-                    log.info("Arbitrage found for {}. Made up of {} bets", match.getText(), arbitrage.getPortfolio().size());
+                    log.info("Arbitrage found for {}. Made up of {} books", match.getText(), arbitrage.getPortfolio().size());
                     log.info("\tBest Profit: {}, Worst Profit: {}", arbitrage.getBest_profit(), arbitrage.getWorst_profit());
-                    for(BookPosition bet : arbitrage.getPortfolio()) {
-                        Bookmaker bookmaker = Bookmaker.valueOf(bet.bookmaker().name());
-                        log.info("\t{}", bet);
-                        Fixture link = match.getLinks().get(bookmaker);
-//                        log.info("\t{}", link.getHyperlink());
-                    }
+                    arbitrage.getPortfolio().forEach((book, listPositions) -> {
+                        log.info("\t{}", book.name());
+                        listPositions.forEach(position -> log.info("\t\t{}", position));
+                    });
                     matchHandler.processArb(arbitrage);
                 }
             } catch (ExecutionException | InterruptedException ex) {
                 log.error("Received error during computation for result in Thread [{}] {}", Thread.currentThread().threadId(), ex.getMessage());
             }
         }
-        log.info("Completed Cycle. Processed {} matches.", submitTaskCount.get());
+        Duration dur = Duration.between(start, Instant.now());
+        log.info("Completed Cycle. Processed {} matches. In {} minutes and {} seconds", submitTaskCount.get(), dur.toMinutesPart(), dur.toSecondsPart());
     }
 
     class MatchProcessor implements Callable<MatchHandler.ArbResponse> {
