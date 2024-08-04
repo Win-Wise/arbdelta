@@ -12,6 +12,8 @@ import java.util.List;
 public class ArbitrageBlock {
     @Id
     private String matching_key;
+    private double last_best_profit;
+    private double last_worst_profit;
     private String match_id;
     private Instant last_seen;
     private Instant first_seen;

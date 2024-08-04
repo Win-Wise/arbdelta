@@ -5,10 +5,9 @@ import com.arbriver.arbdelta.app.service.MongoMatchService;
 import com.arbriver.arbdelta.lib.model.Arbitrage;
 import com.arbriver.arbdelta.lib.model.ArbitrageBlock;
 import com.arbriver.arbdelta.lib.model.Fixture;
-import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
-import com.arbriver.arbdelta.lib.model.dbmodel.FixtureDTO;
 import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
+import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 import com.arbriver.arbdelta.lib.util.OH;
 import com.mongodb.client.result.UpdateResult;
 import org.slf4j.Logger;
@@ -16,8 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,16 +38,32 @@ public class MatchHandler {
 
     public record ArbResponse(Match match, Arbitrage response) {}
 
+    //get list of fixtures to scrape
+    public List<Fixture> getValidFixtures(Match match) {
+        List<Fixture> validFixtures = new ArrayList<>();
+        match.getLinks().forEach((book, fixture) -> {
+            //only scrape fanduel or caesars if the event is happening in next 3 hours
+            if(book.equals(Bookmaker.CAESARS) || book.equals(Bookmaker.FANDUEL)) {
+                if(fixture.getStartTime().isBefore(Instant.now().plus(Duration.ofHours(3)))) {
+                    validFixtures.add(fixture);
+                }
+            }else {
+                validFixtures.add(fixture);
+            }
+        });
+        return validFixtures;
+    }
+
     public void populateOdds(Match match) throws InterruptedException {
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         AtomicInteger submitTaskCount = new AtomicInteger(0);
         try(ExecutorService executorService = Executors.newCachedThreadPool(threadFactory)) {
-            match.getLinks().forEach(((_, fixture) -> {
+            getValidFixtures(match).forEach(fixture -> {
                 executorService.submit(() -> fixture.setPositions(
                         matchService.getPositionsForFixture(fixture, match.getSport()))
                 );
                 submitTaskCount.incrementAndGet();
-            }));
+            });
             executorService.shutdown();
 
             if(!executorService.awaitTermination(120, TimeUnit.SECONDS)) {
@@ -61,13 +78,15 @@ public class MatchHandler {
             arbBlock = new ArbitrageBlock();
             arbBlock.setMatching_key(arb.getMatching_key());
             arbBlock.setArbitrages(List.of(arb));
-            arbBlock.setLast_seen(arb.getTimestamp());
             arbBlock.setFirst_seen(arb.getTimestamp());
             arbBlock.setMatch_id(arb.getMatch_id());
         } else {
-            arbBlock.setLast_seen(arb.getTimestamp());
             arbBlock.getArbitrages().add(arb);
         }
+
+        arbBlock.setLast_seen(arb.getTimestamp());
+        arbBlock.setLast_worst_profit(arb.getWorst_profit());
+        arbBlock.setLast_best_profit(arb.getBest_profit());
 
         UpdateResult result = mongoMatchService.updateArbitrageBlock(arbBlock);
         if(Objects.isNull(result)) {
