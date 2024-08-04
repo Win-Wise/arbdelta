@@ -1,11 +1,15 @@
 package com.arbriver.arbdelta.lib.model;
 
+import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.convert.ValueConverter;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @Getter
@@ -18,5 +22,5 @@ public class Arbitrage {
     @Builder.Default
     private final double worst_profit = 0.0;
     private final Instant timestamp;
-    private final List<BookPosition> portfolio;
+    private final HashMap<Bookmaker, List<Position>> portfolio;
 }

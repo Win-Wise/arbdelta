@@ -9,19 +9,22 @@ import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OH {
-    public static String generateMatchingKey(List<BookPosition> bookPositions, Match match) {
+    public static String generateMatchingKey(Map<Bookmaker, List<Position>> bookPositions, Match match) {
         StringBuilder sb = new StringBuilder();
         sb.append(match.getId()).append("-").append(match.getSport().ordinal());
-        for (BookPosition bookPosition : bookPositions) {
-            sb.append("-");
-            sb.append(bookPosition.bookmaker().ordinal());
-            Position p = bookPosition.position();
-            String positionString = p.getBet_type().toLowerCase() + p.getValue().toLowerCase() + p.isLay();
-            sb.append(Math.abs(positionString.hashCode()));
-        }
+        bookPositions.forEach((book, listPositions) -> {
+            for(Position p : listPositions) {
+                sb.append("-");
+                sb.append(book.ordinal());
+                String positionString = p.getBet_type().toLowerCase() + p.getValue().toLowerCase() + p.isLay();
+                sb.append(Math.abs(positionString.hashCode()));
+            }
+        });
 
         return sb.toString();
     }
@@ -31,7 +34,7 @@ public class OH {
         arbBuilder.timestamp(Instant.now());
         arbBuilder.match_id(match.getId());
 
-        List<BookPosition> bookPositions = new ArrayList<>();
+        HashMap<Bookmaker, List<Position>> bookPositions = new HashMap<>();
 
         //if there is an arbitrage
         if(winWiseResponse.getProfit() != null &&
@@ -44,7 +47,7 @@ public class OH {
                 if(bet.lay()) {
                     p.setLay(true); p.setVolume(bet.volume());
                 }
-                bookPositions.add(new BookPosition(Bookmaker.valueOf(bet.bookmaker()), p));
+                bookPositions.computeIfAbsent(Bookmaker.valueOf(bet.bookmaker()), _ -> new ArrayList<>()).add(p);
             });
         }
 
