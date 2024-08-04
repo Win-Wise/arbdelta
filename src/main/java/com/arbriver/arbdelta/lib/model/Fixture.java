@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -20,5 +21,6 @@ public class Fixture {
     private final String home;
     private final String away;
     private String hyperlink;
-    private List<Position> positions;
+    @Builder.Default
+    private List<Position> positions = new ArrayList<>();
 }

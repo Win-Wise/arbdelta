@@ -38,7 +38,7 @@ public class MatchOrchestrator {
         List<Match> matches = mongoMatchService.listCommonMatches();
         log.info("Starting cycle. Processing {} matches", matches.size());
         AtomicInteger submitTaskCount = new AtomicInteger(0);
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
         CompletionService<MatchHandler.ArbResponse> completionService = new ExecutorCompletionService<>(executorService);
         try {
             for (Match match : matches) {
@@ -69,15 +69,15 @@ public class MatchOrchestrator {
                 log.info("Finished {}/{}: {}. {} positions processed.", i, submitTaskCount.get(), match.getText(), numPositions);
 
                 if(arbitrage.getBest_profit() > 0.0) {
-                    matchHandler.processArb(arbitrage);
-                    log.info("Arbitrage found for {}", match.getText());
+                    log.info("Arbitrage found for {}. Made up of {} bets", match.getText(), arbitrage.getPortfolio().size());
                     log.info("\tBest Profit: {}, Worst Profit: {}", arbitrage.getBest_profit(), arbitrage.getWorst_profit());
                     for(BookPosition bet : arbitrage.getPortfolio()) {
                         Bookmaker bookmaker = Bookmaker.valueOf(bet.bookmaker().name());
                         log.info("\t{}", bet);
                         Fixture link = match.getLinks().get(bookmaker);
-                        log.info("\t{}", link.getHyperlink());
+//                        log.info("\t{}", link.getHyperlink());
                     }
+                    matchHandler.processArb(arbitrage);
                 }
             } catch (ExecutionException | InterruptedException ex) {
                 log.error("Received error during computation for result in Thread [{}] {}", Thread.currentThread().threadId(), ex.getMessage());
