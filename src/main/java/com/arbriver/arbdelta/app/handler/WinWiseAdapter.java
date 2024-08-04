@@ -1,6 +1,5 @@
 package com.arbriver.arbdelta.app.handler;
 
-import com.arbriver.arbdelta.lib.model.Fixture;
 import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseRequest;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
@@ -63,11 +62,11 @@ public class WinWiseAdapter {
 
             link.getPositions().forEach(position -> {
                 WinWiseRequest.Bet bet = WinWiseRequest.Bet.builder()
-                        .value(position.getValue())
-                        .odds(position.getOdds())
-                        .bet_type(position.getBet_type())
-                        .volume(position.getVolume() == null ? -1.0 : position.getVolume())
-                        .lay(position.isLay())
+                        .value(position.value())
+                        .odds(position.odds())
+                        .bet_type(position.bet_type())
+                        .volume(position.volume() == null ? -1.0 : position.volume())
+                        .lay(position.lay())
                         .bookmaker(link.getBook().name())
                         .build();
                 positions.add(bet);

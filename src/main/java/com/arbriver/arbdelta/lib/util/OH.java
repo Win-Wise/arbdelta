@@ -1,7 +1,6 @@
 package com.arbriver.arbdelta.lib.util;
 
 import com.arbriver.arbdelta.lib.model.Arbitrage;
-import com.arbriver.arbdelta.lib.model.BookPosition;
 import com.arbriver.arbdelta.lib.model.Match;
 import com.arbriver.arbdelta.lib.model.Position;
 import com.arbriver.arbdelta.lib.model.apimodel.WinWiseResponse;
@@ -21,7 +20,7 @@ public class OH {
             for(Position p : listPositions) {
                 sb.append("-");
                 sb.append(book.ordinal());
-                String positionString = p.getBet_type().toLowerCase() + p.getValue().toLowerCase() + p.isLay();
+                String positionString = p.bet_type().toLowerCase() + p.value().toLowerCase() + p.lay();
                 sb.append(Math.abs(positionString.hashCode()));
             }
         });
@@ -43,10 +42,7 @@ public class OH {
             arbBuilder.best_profit(winWiseResponse.getProfit().getLast());
             arbBuilder.worst_profit(winWiseResponse.getProfit().getFirst());
             winWiseResponse.getBets().forEach(bet -> {
-                Position p = new Position(bet.bet_type(), bet.odds(), bet.value());
-                if(bet.lay()) {
-                    p.setLay(true); p.setVolume(bet.volume());
-                }
+                Position p = new Position(bet.bet_type(), bet.odds(), bet.value(), bet.lay(), bet.volume(), bet.wager());
                 bookPositions.computeIfAbsent(Bookmaker.valueOf(bet.bookmaker()), _ -> new ArrayList<>()).add(p);
             });
         }

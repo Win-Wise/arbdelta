@@ -4,12 +4,10 @@ import com.arbriver.arbdelta.lib.model.constants.Bookmaker;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.convert.ValueConverter;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Builder
 @Getter
