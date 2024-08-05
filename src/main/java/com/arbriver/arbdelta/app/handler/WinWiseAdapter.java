@@ -51,12 +51,15 @@ public class WinWiseAdapter {
 
         match.getLinks().forEach((bookmaker, link) -> {
             double commission = 0.0;
+            boolean ignoreWagerPrecision = false;
             if(link.getBook().equals(Bookmaker.BETFAIR)) {
                 commission = 0.02;
+                ignoreWagerPrecision = true;
             }
             WinWiseRequest.Book book = WinWiseRequest.Book.builder()
                     .bookmaker(link.getBook().name())
                     .commission(commission)
+                    .ignore_wager_precision(ignoreWagerPrecision)
                     .build();
             books.add(book);
 

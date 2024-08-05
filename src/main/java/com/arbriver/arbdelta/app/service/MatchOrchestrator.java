@@ -97,7 +97,9 @@ public class MatchOrchestrator {
         public MatchHandler.ArbResponse call() {
             try {
                 matchHandler.populateOdds(match);
-                return matchHandler.getArbResponse(match);
+                MatchHandler.ArbResponse resp = matchHandler.getArbResponse(match);
+                Thread.sleep(1000);
+                return resp;
 
             } catch(Exception ex) {
                 log.error("Error processing match {}", match.getText(), ex);

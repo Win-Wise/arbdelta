@@ -12,9 +12,9 @@ import java.util.List;
 @Builder
 public final class WinWiseRequest {
     @Builder.Default
-    private double wager_limit = -1;
+    private double wager_limit = 1000;
     @Builder.Default
-    private double wager_precision = 0.01;
+    private double wager_precision = 1;
     @Builder.Default
     private boolean no_draw = false;
     @Builder.Default
