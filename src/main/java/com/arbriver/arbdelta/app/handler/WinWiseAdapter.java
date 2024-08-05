@@ -57,7 +57,7 @@ public class WinWiseAdapter {
                 ignoreWagerPrecision = true;
             }
             WinWiseRequest.Book book = WinWiseRequest.Book.builder()
-                    .bookmaker(link.getBook().name())
+                    .id(link.getBook().name())
                     .commission(commission)
                     .ignore_wager_precision(ignoreWagerPrecision)
                     .build();
@@ -79,7 +79,7 @@ public class WinWiseAdapter {
         return WinWiseRequest.builder()
                 .executionId(match.getText().toLowerCase(Locale.ROOT))
                 .bets(positions)
-                .books(books)
+                .bookmakers(books)
                 .build();
     }
 }

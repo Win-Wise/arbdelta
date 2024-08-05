@@ -25,7 +25,7 @@ public final class WinWiseRequest {
     private int total_max_wager_count = -1;
     private String executionId;
     private List<WinWiseRequest.Bet> bets;
-    private List<WinWiseRequest.Book> books;
+    private List<WinWiseRequest.Book> bookmakers;
 
     @Builder
     @Setter
@@ -47,11 +47,11 @@ public final class WinWiseRequest {
     @Getter
     @Setter
     public static final class Book {
-        private final String bookmaker;
+        private final String id;
         @Builder.Default
         private double commission = 0.0;
         @Builder.Default
-        private double wager_limit = -1.0;
+        private double wager_limit = -1;
         @Builder.Default
         private boolean ignore_wager_precision = false;
         @Builder.Default
